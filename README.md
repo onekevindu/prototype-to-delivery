@@ -1,15 +1,32 @@
-# Prototype to Delivery (`prototype-to-delivery`)
+<div align="center">
 
-> **根据原型、界面截图或图片说明开展软件功能开发：先形成可确认的开发设计，确认后自主完成实现、验证与交付，减少用户反复提醒。**  
-> *Transform prototypes and screenshots into verified, production-ready deliverables with autonomous execution and strict human-in-the-loop design approval.*
+# 🚀 Prototype to Delivery (`prototype-to-delivery`)
+
+### 一张截图直达可验收代码，告别“监工式”结对编程
+**Turn UI Prototypes into Verified, Production-Ready Deliverables — Zero Micromanagement, Zero Blind Guessing.**
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Compatible with Codex](https://img.shields.io/badge/Codex-Compatible-black?logo=openai)](https://chatgpt.com)
+[![Compatible with Google Antigravity](https://img.shields.io/badge/Google%20Antigravity-Compatible-4285F4?logo=google)](https://deepmind.google)
+[![Python 3 Ready](https://img.shields.io/badge/Python-3.8+-brightgreen?logo=python)](scripts/verify.py)
+
+<p align="center">
+  <b>让 Coding Agent 真正拥有交付确定性</b><br>
+  <b>设计确认前：不凭空盲猜、不擅动代码 | 设计确认后：零催促推进、自主验证闭环</b>
+</p>
 
 ---
 
-## 📖 Design Philosophy
+</div>
 
-Why this skill exists, what problems it solves, and why it deliberately avoids prescribing the Coding Agent's internal development workflow.
+## 📖 Design Philosophy (设计初衷)
 
-👉 **[设计初衷与理念 (DESIGN_PHILOSOPHY.md)](DESIGN_PHILOSOPHY.md)**
+> **为什么这个 Skill 存在？它解决了什么痛点？为什么坚决避免硬编码 Agent 的内部开发步骤？**
+
+当给 Coding Agent 提供原型截图时，传统交互往往陷入两难：要么 **轻率编码盲猜业务**（把外观当业务，造成严重返工），要么 **缺乏自主推进力**（每改一个文件就停下来等用户喊“继续”）。
+
+本 Skill 将成熟开发者的结对协作习惯固化为自动化契约：
+👉 **深入阅读：[设计初衷与理念 (DESIGN_PHILOSOPHY.md)](DESIGN_PHILOSOPHY.md)**
 
 ---
 
@@ -31,16 +48,16 @@ Why this skill exists, what problems it solves, and why it deliberately avoids p
 
 ```text
 prototype-to-delivery/
-├── README.md
-├── DESIGN_PHILOSOPHY.md      # 设计初衷与理念
-├── SKILL.md                  # 主技能入口与协作约定
+├── README.md                 # 项目介绍与快速开始
+├── DESIGN_PHILOSOPHY.md      # 核心设计理念与人机协作契约
+├── SKILL.md                  # 主技能入口与行为约定
 ├── scripts/
-│   └── verify.py             # 安装状态与文件完整性自动化验证脚本
+│   └── verify.py             # 一键自动化验证脚本 (纯标准库，零依赖)
 ├── agents/
 │   └── openai.yaml           # Codex / UI 发现与调用元信息
 └── references/
-    ├── design-outline.md     # 快速审阅提纲与原型隐含盲区清单
-    └── completion-check.md   # 交付前四维完整性检查清单
+    ├── design-outline.md     # 5维快速审阅结构与高频业务盲区排查
+    └── completion-check.md   # 4维完整性自检与交付标准
 ```
 
 ---
