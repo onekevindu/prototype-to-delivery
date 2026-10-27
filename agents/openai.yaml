@@ -1,0 +1,4 @@
+interface:
+  display_name: "原型到交付"
+  short_description: "提供原型与说明，先确认开发设计，再自主完成实现、验证与交付"
+  default_prompt: "使用 $prototype-to-delivery，按提供的原型和说明完成这个功能。"
