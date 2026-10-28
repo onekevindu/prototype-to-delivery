@@ -110,7 +110,7 @@ class MetadataAndCommandTests(unittest.TestCase):
         with patch.object(verify, "yaml", None):
             result, output = self.run_main()
         self.assertEqual(result, 2)
-        self.assertIn("pip install -r requirements.txt", output)
+        self.assertIn("pip install PyYAML", output)
 
     def test_bad_runtime_combinations_and_timeouts_are_usage_errors(self):
         cases = [("--runtime",), ("--platform", "gemini-cli", "--runtime"),

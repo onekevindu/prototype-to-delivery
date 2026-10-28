@@ -75,13 +75,8 @@ prototype-to-delivery/
 ├── VERSION                   # Skill 包版本（MAJOR.MINOR.PATCH）
 ├── CHANGELOG.md               # 各版本变更及迁移说明
 ├── scripts/
-│   ├── install.sh            # macOS/Linux 安装管理，无需 Python
-│   ├── install.py            # v1.0.0 旧流程兼容，可选
 │   └── verify.py             # 文件与元数据校验，可选检查安装文件和 Codex 运行时
-├── requirements.txt         # 仅 Python 维护工具依赖，普通安装无需使用
 ├── tests/
-│   ├── test_install_shell.py # 无 Python 环境的安装、更新和失败恢复测试
-│   ├── test_install.py       # 旧 Python 安装器的兼容测试
 │   └── test_verify.py        # 校验失败、退出码和协议处理的回归测试
 ├── agents/
 │   └── openai.yaml           # Codex / UI 发现与调用元信息
@@ -94,113 +89,183 @@ prototype-to-delivery/
 
 ## 🚀 安装、重新安装与更新 (Installation & Updates)
 
-**安装和使用本 Skill 不需要 Python、pip、Node.js 或虚拟环境。** 它是一组文本指令，下载 ZIP 后复制目录即可；Git 和下述 Shell 脚本都是可选方式。Python 文件只用于维护验证或兼容旧安装流程，不会由 Skill 自动执行。
+三种方式任选一种，无需 Python、pip、Node.js 或安装器文件。**首次安装、更新和回退使用同一套步骤**：已有目录先完整备份，再放入所选版本，避免新旧文件混合。
 
-### 1. 直接下载 ZIP（适用于 Windows、macOS、Linux）
+以下自动安装命令默认安装到 Codex 的 `~/.agents/skills/prototype-to-delivery`。如果你已有安装，或使用其他宿主，只需把命令中的 `skill_dir` / `$skillDir` 改为实际目录：
 
-1. 下载 [v1.0.1 ZIP](https://github.com/onekevindu/prototype-to-delivery/archive/refs/tags/v1.0.1.zip) 并解压。
-2. 将解压得到的 `prototype-to-delivery-1.0.1` 文件夹改名为 `prototype-to-delivery`。
-3. 放到下表中对应产品的 skills 目录，使路径直接成为 `…/skills/prototype-to-delivery/SKILL.md`，不要多套一层文件夹。
-4. 在宿主的技能列表中检查发现与启用状态，然后开始新任务。
-
-**目标已存在时，先按“重新安装与回退”备份旧目录，不要选择合并覆盖。** 直接复制整个目录也无需运行其中的 Python 文件。
-
-| 产品 | 用户级目录（最后放入 `prototype-to-delivery` 文件夹） |
+| 产品 | 完整安装目录 |
 | --- | --- |
-| Codex | 新安装使用 `~/.agents/skills/`；已安装在 `~/.codex/skills/` 时继续使用原位置；配置 `CODEX_HOME` 时核对其 `skills/` |
-| Antigravity App / IDE | `~/.gemini/config/skills/` |
-| Antigravity CLI | `~/.gemini/antigravity-cli/skills/` |
-| Gemini CLI | `~/.gemini/skills/`，也支持已有的 `~/.agents/skills/` |
+| Codex | `~/.agents/skills/prototype-to-delivery`；已有 `~/.codex/skills/prototype-to-delivery` 时使用原目录；自定义 `CODEX_HOME` 时使用其 `skills/prototype-to-delivery` |
+| Antigravity App / IDE | `~/.gemini/config/skills/prototype-to-delivery` |
+| Antigravity CLI | `~/.gemini/antigravity-cli/skills/prototype-to-delivery` |
+| Gemini CLI | `~/.gemini/skills/prototype-to-delivery`，也支持已有的 `~/.agents/skills/prototype-to-delivery` |
 
-`~` 表示用户目录。在 Windows 文件管理器中可用 `%USERPROFILE%` 定位用户目录，再进入对应的 `.agents\skills` 等子目录；不存在时创建。不要在同一宿主的多个兼容目录重复安装。使用 `.agents/skills/` 共用位置时，更新会影响读取它的所有宿主；项目级和插件提供的同名副本也应在宿主中核对。
+`~` 表示用户目录，Windows 中可用 `%USERPROFILE%` 定位。选择实际使用的一个位置即可，避免同一宿主重复发现同名 Skill。目录说明见 [Codex](https://learn.chatgpt.com/docs/build-skills)、[Antigravity](https://antigravity.google/docs/skills)、[Gemini CLI](https://geminicli.com/docs/cli/using-agent-skills/)。
 
-目录与发现方法参考：[Codex Skills](https://learn.chatgpt.com/docs/build-skills)、[Antigravity Skills](https://antigravity.google/docs/skills)、[Gemini CLI Skills](https://geminicli.com/docs/cli/using-agent-skills/)。
+### 方式一：Git 直接克隆安装
 
-### 2. 可选：用 Shell 管理安装（macOS / Linux）
+适合已有 Git 的用户。复制对应系统的整段命令执行；**克隆前会移走并备份旧安装**，克隆失败时恢复旧目录。
 
-macOS/Linux 可使用系统自带的 Bash 与标准命令，无需安装 Python。进入下载解压的源码目录后运行；源码与安装目录需分开：
-
-```bash
-bash scripts/install.sh install --platform codex
-bash scripts/install.sh status --platform codex
-```
-
-`--platform` 还支持 `antigravity`、`antigravity-cli`、`gemini-cli`。也可用 `--dest /完整路径/prototype-to-delivery` 明确指定目录。脚本复用已有安装位置；发现多个候选位置时会停止，请明确选择并排除重复安装。
-
-脚本只部署 `SKILL.md`、两个引用文档、`agents/openai.yaml`、`LICENSE`、`VERSION`，并写入 `.installation.cksum`。相同内容重复安装直接跳过；有不同内容时要求明确选择更新或重装。
-
-Windows 用户可直接使用上面的 ZIP 方式，无需为此安装 Bash 或 Python。
-
-### 3. 更新与本地修改
-
-**ZIP 安装用户**：下载新版本 ZIP，先将旧安装完整移到 skills 目录外作为备份，再放入新版目录。有自己修改的内容时，先比较和保留，不要直接覆盖。
-
-**Shell 管理用户**：下载并解压新版本，在新源码目录执行：
+<details>
+<summary>macOS / Linux：终端执行</summary>
 
 ```bash
-bash scripts/install.sh update --platform codex
+(
+  set -e
+  version="v1.0.2"
+  skill_dir="$HOME/.agents/skills/prototype-to-delivery"
+  backup_dir=""
+  mkdir -p "$(dirname "$skill_dir")" "$HOME/.skill-backups"
+  if [ -e "$skill_dir" ] || [ -L "$skill_dir" ]; then
+    backup_dir=$(mktemp -d "$HOME/.skill-backups/prototype-to-delivery.XXXXXX")
+    mv "$skill_dir" "$backup_dir/prototype-to-delivery"
+    printf '旧版本备份：%s\n' "$backup_dir/prototype-to-delivery"
+  fi
+  if git clone --depth 1 --branch "$version" https://github.com/onekevindu/prototype-to-delivery.git "$skill_dir"; then
+    printf '已安装 %s：%s\n' "$version" "$skill_dir"
+  else
+    rm -rf "$skill_dir"
+    [ -z "$backup_dir" ] || mv "$backup_dir/prototype-to-delivery" "$skill_dir"
+    exit 1
+  fi
+)
 ```
 
-它检查安装记录和文件校验值，只接受更高版本；相同版本且内容相同则跳过。本地修改、删除或额外文件会阻止自动更新。校验值用于检测文件变化，不是发布者签名或安全认证。
+</details>
 
-已有 Git 源码仓库也可先确认工作区干净，再运行以下命令；Git 不是 ZIP 安装的前置条件：
+<details>
+<summary>Windows：PowerShell 执行</summary>
+
+```powershell
+& {
+  $ErrorActionPreference = "Stop"
+  $version = "v1.0.2"
+  $skillDir = Join-Path $env:USERPROFILE ".agents\skills\prototype-to-delivery"
+  $backupDir = $null
+  New-Item -ItemType Directory -Force (Split-Path $skillDir) | Out-Null
+  if (Test-Path -LiteralPath $skillDir) {
+    $backupRoot = Join-Path $env:USERPROFILE ".skill-backups"
+    New-Item -ItemType Directory -Force $backupRoot | Out-Null
+    $backupDir = Join-Path $backupRoot ("prototype-to-delivery-" + [guid]::NewGuid().ToString("N"))
+    Move-Item -LiteralPath $skillDir -Destination $backupDir
+    Write-Host "旧版本备份：$backupDir"
+  }
+  try {
+    git clone --depth 1 --branch $version https://github.com/onekevindu/prototype-to-delivery.git $skillDir
+    if ($LASTEXITCODE -ne 0) { throw "Git 克隆失败" }
+  } catch {
+    if (Test-Path -LiteralPath $skillDir) { Remove-Item -LiteralPath $skillDir -Recurse -Force }
+    if ($backupDir) { Move-Item -LiteralPath $backupDir -Destination $skillDir }
+    throw
+  }
+  Write-Host "已安装 ${version}：$skillDir"
+}
+```
+
+</details>
+
+### 方式二：自动下载 ZIP 并安装（无需 Git）
+
+复制对应系统的整段命令执行，自动下载、解压、备份旧安装并放入新版。下载或解压失败时，旧安装仍保留在原位置。macOS/Linux 使用 `curl` 和 `unzip`；Windows 使用系统自带的 PowerShell 下载与解压功能。
+
+<details>
+<summary>macOS / Linux：终端执行</summary>
 
 ```bash
-git switch main && git pull --ff-only &&
-bash scripts/install.sh update --platform codex
+(
+  set -e
+  version="v1.0.2"
+  skill_dir="$HOME/.agents/skills/prototype-to-delivery"
+  work_dir=$(mktemp -d)
+  trap 'rm -rf "$work_dir"' EXIT
+  curl -fL --retry 2 "https://github.com/onekevindu/prototype-to-delivery/archive/refs/tags/$version.zip" -o "$work_dir/skill.zip"
+  unzip -q "$work_dir/skill.zip" -d "$work_dir"
+  source_dir="$work_dir/prototype-to-delivery-${version#v}"
+  test -f "$source_dir/SKILL.md"
+  mkdir -p "$(dirname "$skill_dir")" "$HOME/.skill-backups"
+  if [ -e "$skill_dir" ] || [ -L "$skill_dir" ]; then
+    backup_dir=$(mktemp -d "$HOME/.skill-backups/prototype-to-delivery.XXXXXX")
+    mv "$skill_dir" "$backup_dir/prototype-to-delivery"
+    printf '旧版本备份：%s\n' "$backup_dir/prototype-to-delivery"
+  fi
+  mv "$source_dir" "$skill_dir"
+  printf '已安装 %s：%s\n' "$version" "$skill_dir"
+)
 ```
 
-更新源码不会自动改变安装目录。`main` 可能含未发布改动；需要可重复安装时使用发布标签对应的 ZIP 或 Git 标签。
+</details>
 
-### 4. 重新安装、旧版本迁移与回退
+<details>
+<summary>Windows：PowerShell 执行</summary>
 
-**无需命令行的方式**：将整个旧安装移到 skills 扫描目录外，例如用户目录下自己创建的 `skill-backups`，然后放入新版本目录。重新安装、升级或回退都使用这一流程。需要恢复时，先保存当前目录，再将原备份移回原位置。
-
-**Shell 方式**（也适用于 v1.0.0 Python 安装、手工复制、损坏修复、同版本重装及回退）：
-
-```bash
-bash scripts/install.sh reinstall --platform codex
-bash scripts/install.sh status --platform codex
+```powershell
+& {
+  $ErrorActionPreference = "Stop"
+  $version = "v1.0.2"
+  $skillDir = Join-Path $env:USERPROFILE ".agents\skills\prototype-to-delivery"
+  $workDir = Join-Path ([IO.Path]::GetTempPath()) ("prototype-to-delivery-" + [guid]::NewGuid().ToString("N"))
+  New-Item -ItemType Directory $workDir | Out-Null
+  try {
+    $zipPath = Join-Path $workDir "skill.zip"
+    Invoke-WebRequest -UseBasicParsing -Uri "https://github.com/onekevindu/prototype-to-delivery/archive/refs/tags/$version.zip" -OutFile $zipPath
+    Expand-Archive -LiteralPath $zipPath -DestinationPath $workDir
+    $sourceDir = Join-Path $workDir ("prototype-to-delivery-" + ($version -replace '^v', ''))
+    if (-not (Test-Path -LiteralPath (Join-Path $sourceDir "SKILL.md"))) { throw "ZIP 内容不完整" }
+    New-Item -ItemType Directory -Force (Split-Path $skillDir) | Out-Null
+    if (Test-Path -LiteralPath $skillDir) {
+      $backupRoot = Join-Path $env:USERPROFILE ".skill-backups"
+      New-Item -ItemType Directory -Force $backupRoot | Out-Null
+      $backupDir = Join-Path $backupRoot ("prototype-to-delivery-" + [guid]::NewGuid().ToString("N"))
+      Move-Item -LiteralPath $skillDir -Destination $backupDir
+      Write-Host "旧版本备份：$backupDir"
+    }
+    Move-Item -LiteralPath $sourceDir -Destination $skillDir
+    Write-Host "已安装 ${version}：$skillDir"
+  } finally {
+    Remove-Item -LiteralPath $workDir -Recurse -Force
+  }
+}
 ```
 
-脚本先准备新文件，再将旧目录完整备份到安装目录上两级下的 `skill-backups/prototype-to-delivery/<时间-标识>/`，例如 `~/.codex/skill-backups/…`，随后替换安装。备份包括本地修改和旧 `.git`，实际路径会打印出来，不会自动删除或放进 skills 扫描目录。
+</details>
 
-v1.0.0 的 `.installation.json` 和手工复制目录需要先执行一次 `reinstall` 迁移，之后可用 Shell 的 `update`。原 `scripts/install.py` 保留供旧流程兼容；无需为迁移安装或运行 Python，也不要混用两种安装器管理同一个目录。
+### 方式三：手动安装
 
-Shell 安装器可捕获的替换失败会恢复旧目录；强制结束进程或断电后需检查备份与安装状态。出现遗留锁时，仅在确认原进程已经结束后移除提示的锁目录。符号链接安装需在链接源维护，脚本不会覆盖它。
+1. 下载 [v1.0.2 ZIP](https://github.com/onekevindu/prototype-to-delivery/archive/refs/tags/v1.0.2.zip) 并解压。
+2. 若已有安装，将整个旧目录移到用户目录下的 `.skill-backups` 中，并用版本号或日期区分。
+3. 将解压得到的 `prototype-to-delivery-1.0.2` 文件夹改名为 `prototype-to-delivery`，放到上表中对应的位置。
+4. 确认最终路径直接是 `…/skills/prototype-to-delivery/SKILL.md`，在宿主中刷新或开始新任务。
 
-需要回退时下载目标版本 ZIP，按上述备份替换流程操作。Shell 用户也可从当前工具恢复一个包含完整六个安装文件的备份：
+### 更新与安装历史版本
 
-```bash
-bash scripts/install.sh reinstall --platform codex --source /完整备份路径
-```
+在 [GitHub 历史版本](https://github.com/onekevindu/prototype-to-delivery/tags) 选择需要的标签，例如 `v1.0.1`：
 
-没有 `VERSION` 的旧备份用文件管理器恢复，或取回其中的定制修改。`reinstall` 不自动合并定制；需要保留的改动应先比较并合入准备安装的源码。
+- **Git / ZIP 自动安装**：把命令里的 `version` 改成对应标签，重新执行整段命令。
+- **手动安装**：下载该标签的 ZIP，按方式三重新安装。
 
-版本号见 [VERSION](VERSION)，迁移说明见 [CHANGELOG.md](CHANGELOG.md)。Git 标签固定对应源码，已发布标签不会覆盖。
+已发布标签保留，不移动、不覆盖；不同版本可以重新下载。当前版本见 [VERSION](VERSION)，变化见 [CHANGELOG.md](CHANGELOG.md)。旧目录备份包含本地定制、安装记录和旧 `.git`；需要保留定制时，从备份中取回并比较合并。
 
-安装或更新后核对宿主发现状态。Codex 会自动检测技能变更，未出现时重启；Gemini CLI 可执行 `/skills reload`。已经进行中的任务可能仍保留旧上下文，不应假定会即时重新读取。
-
-Shell 安装器退出码：`0` 操作完成或内容相同；`2` 参数错误；其他非零值表示操作失败。它检查文件完整性、版本和变化情况，不承担完整 YAML 解析或运行时加载验证。
+这些命令只处理选定的安装目录；已有其他位置的同名副本时，应先整理为一个有效安装位置。备份在 skills 扫描目录之外，确认新版正常后可自行清理。
 
 ---
 
 ## 🔍 验证安装是否成功 (Verification)
 
-普通用户直接在宿主中验证，无需执行 Python 脚本。
+安装完成后直接在宿主中检查：
 
+### 1. 在 Codex 中验证
 
-
-#### 1. 在 Codex 中验证
 - **输入联想测试**：在 Codex 聊天输入框中输入字符 `$`，查看弹出的快捷技能列表中是否存在 `$prototype-to-delivery`（显示名称为“原型到交付”）。若能正常联想，说明识别成功。
 - **设置面板查看**：在 Codex 的 Settings -> Skills 列表中查看 `prototype-to-delivery` 是否处于已启用状态。
 
-#### 2. 在 Antigravity 中验证
+### 2. 在 Antigravity 中验证
+
 - **App / IDE**：检查产品的技能列表或 Customizations 中是否发现并启用该技能。App 支持显式输入 `/prototype-to-delivery`。
 - **CLI**：检查 `/prototype-to-delivery` 是否可调用；使用插件分发时，可通过 `agy plugin list --json` 核对插件提供的技能。
 - Agent 的口头“已加载”回复不能单独证明发现成功；结合宿主列表、实际调用和读取该 Skill 的执行记录确认。
 
-#### 3. 在 Gemini CLI 中验证
+### 3. 在 Gemini CLI 中验证
+
 - 执行 `/skills list` 查看发现及启用状态，必要时执行 `/skills reload` 后重查。
 - 显式要求使用 `prototype-to-delivery` 并查看激活过程，按当前宿主的授权机制确认。
 
@@ -220,24 +285,17 @@ Shell 安装器退出码：`0` 操作完成或内容相同；`2` 参数错误；
 
 ## 📦 可选的维护者验证与发布
 
-**本节只面向维护源码和发布版本的人，不是安装或使用 Skill 的步骤。** 完整 YAML 校验和自动化测试使用 Python 3.8+ 与 PyYAML；普通用户可跳过本节。
+普通用户安装时无需执行本节。维护者可在已有的 Python 开发环境安装 PyYAML，运行 YAML 校验与回归测试：
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
-python3 -m pip install -r requirements.txt
+python3 -m pip install PyYAML
 python3 scripts/verify.py
 python3 -m unittest discover -s tests -v
 ```
 
-`verify.py` 默认只验证指定 Skill 的文件与 YAML 元数据。可用 `--path /path/to/skill` 指定目录，`--platform codex` 等检查对应平台的安装文件。仅显式添加 `--platform codex --runtime --timeout 10` 才启动本地 Codex app-server 检查发现与启用状态；CLI 位置特殊时加 `--codex-cli /path/to/codex`。其他产品的运行时状态请在宿主内检查。
+`verify.py` 默认只检查本地文件与 YAML 元数据；显式使用 `--platform codex --runtime --timeout 10` 时检查本地 Codex 的发现与启用状态。文件检查、运行时发现和实际业务行为应分别验证。
 
-验证工具退出码：`0` 本次请求的检查通过，`1` 检查失败，`2` 参数错误或缺少可选维护依赖。文件校验和宿主发现成功都不等于业务行为已验证。
-
-- 修改时按兼容性更新 `VERSION`，在 `CHANGELOG.md` 记录变化与迁移方法。修复递增 PATCH，兼容能力递增 MINOR，不兼容契约变化递增 MAJOR。
-- 新增执行 Skill 必需的资源时，同步更新安装器的文件清单与相关测试；维护工具不进入 Shell 管理的安装目录。
-- Shell 安装器测试在只提供系统命令、不提供 Python/Node/pip 的 PATH 中运行实际子进程，验证普通安装不会调用这些工具。测试执行器使用 Python，不代表被测安装过程依赖 Python。
-- 校验通过后提交并创建对应版本标签，再推送分支与该标签。GitHub 自动提供标签对应的源码 ZIP；更新 README 的下载链接。已发布标签不移动、不覆盖。
+发布时更新 `VERSION`、`CHANGELOG.md` 和本页命令中的版本号，通过验证后提交并创建对应 Git 标签，再推送分支和标签。GitHub 会提供该标签的源码 ZIP，历史标签持续保留。
 
 ---
 

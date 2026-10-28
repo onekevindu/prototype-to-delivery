@@ -30,7 +30,7 @@ class VerificationError(Exception):
 def parse_frontmatter(content):
     """Parse actual YAML and validate fields needed for skill discovery."""
     if yaml is None:
-        raise VerificationError("缺少 PyYAML；请运行 python3 -m pip install -r requirements.txt")
+        raise VerificationError("缺少 PyYAML；请运行 python3 -m pip install PyYAML")
     lines = content.splitlines()
     if not lines or lines[0] != "---":
         raise VerificationError("SKILL.md 必须以 YAML frontmatter 开始")
@@ -57,7 +57,7 @@ def parse_frontmatter(content):
 def verify_skill_folder(folder_path, label="skill"):
     folder = Path(folder_path)
     if yaml is None:
-        print("FAIL 缺少 PyYAML；请运行 python3 -m pip install -r requirements.txt")
+        print("FAIL 缺少 PyYAML；请运行 python3 -m pip install PyYAML")
         return False
     required = ("SKILL.md", "references/design-outline.md", "references/completion-check.md")
     errors = []
@@ -240,7 +240,7 @@ def main(argv=None):
     if args.codex_cli and not args.runtime:
         parser.error("--codex-cli 需要同时使用 --runtime")
     if yaml is None:
-        print("ERROR 缺少 PyYAML；请运行 python3 -m pip install -r requirements.txt", file=sys.stderr)
+        print("ERROR 缺少 PyYAML；请运行 python3 -m pip install PyYAML", file=sys.stderr)
         return 2
     args.path = args.path.expanduser().resolve()
     if not verify_skill_folder(args.path, "当前 skill"):
