@@ -89,163 +89,44 @@ prototype-to-delivery/
 
 ## 🚀 安装、重新安装与更新 (Installation & Updates)
 
-三种方式任选一种，无需 Python、pip、Node.js 或安装器文件。**首次安装、更新和回退使用同一套步骤**：已有目录先完整备份，再放入所选版本，避免新旧文件混合。
+直接在你使用的 Codex、Gemini CLI 或 Antigravity 聊天中提出安装要求即可。指定宿主和目标版本，由 Agent 根据宿主能力、配置和已有安装确定正确位置；用户无需判断目录或执行安装脚本，也无需安装 Python、Node.js 等运行环境。
 
-以下自动安装命令默认安装到 Codex 的 `~/.agents/skills/prototype-to-delivery`。如果你已有安装，或使用其他宿主，只需把命令中的 `skill_dir` / `$skillDir` 改为实际目录：
+### 通过聊天安装指定版本
 
-| 产品 | 完整安装目录 |
-| --- | --- |
-| Codex | `~/.agents/skills/prototype-to-delivery`；已有 `~/.codex/skills/prototype-to-delivery` 时使用原目录；自定义 `CODEX_HOME` 时使用其 `skills/prototype-to-delivery` |
-| Antigravity App / IDE | `~/.gemini/config/skills/prototype-to-delivery` |
-| Antigravity CLI | `~/.gemini/antigravity-cli/skills/prototype-to-delivery` |
-| Gemini CLI | `~/.gemini/skills/prototype-to-delivery`，也支持已有的 `~/.agents/skills/prototype-to-delivery` |
+把下面这段话发给 Agent，将“当前宿主”换成你实际使用的软件名称也可以：
 
-`~` 表示用户目录，Windows 中可用 `%USERPROFILE%` 定位。选择实际使用的一个位置即可，避免同一宿主重复发现同名 Skill。目录说明见 [Codex](https://learn.chatgpt.com/docs/build-skills)、[Antigravity](https://antigravity.google/docs/skills)、[Gemini CLI](https://geminicli.com/docs/cli/using-agent-skills/)。
+```text
+请为我当前使用的 Coding Agent 安装 prototype-to-delivery，指定版本 v1.0.3。
+仓库：https://github.com/onekevindu/prototype-to-delivery
 
-### 方式一：Git 直接克隆安装
-
-适合已有 Git 的用户。复制对应系统的整段命令执行；**克隆前会移走并备份旧安装**，克隆失败时恢复旧目录。
-
-<details>
-<summary>macOS / Linux：终端执行</summary>
-
-```bash
-(
-  set -e
-  version="v1.0.2"
-  skill_dir="$HOME/.agents/skills/prototype-to-delivery"
-  backup_dir=""
-  mkdir -p "$(dirname "$skill_dir")" "$HOME/.skill-backups"
-  if [ -e "$skill_dir" ] || [ -L "$skill_dir" ]; then
-    backup_dir=$(mktemp -d "$HOME/.skill-backups/prototype-to-delivery.XXXXXX")
-    mv "$skill_dir" "$backup_dir/prototype-to-delivery"
-    printf '旧版本备份：%s\n' "$backup_dir/prototype-to-delivery"
-  fi
-  if git clone --depth 1 --branch "$version" https://github.com/onekevindu/prototype-to-delivery.git "$skill_dir"; then
-    printf '已安装 %s：%s\n' "$version" "$skill_dir"
-  else
-    rm -rf "$skill_dir"
-    [ -z "$backup_dir" ] || mv "$backup_dir/prototype-to-delivery" "$skill_dir"
-    exit 1
-  fi
-)
+请根据实际宿主、配置和已有安装确定正确目录，优先使用宿主原生安装能力。
+自行选择 Git 或下载对应标签 ZIP 的方式完成，不要求我安装额外运行环境。
+若已有旧版本，先完整备份到技能扫描目录之外，再替换为指定版本；失败时恢复旧安装。
+完成后告诉我安装版本、实际路径、备份位置，以及宿主是否已识别该 Skill。
+如果无法确定目标宿主或发现多个有效安装位置，再向我确认。
 ```
 
-</details>
+### 更新、重新安装或回退
 
-<details>
-<summary>Windows：PowerShell 执行</summary>
+使用同样的聊天方式说明目标版本。更新到当前发布版本：
 
-```powershell
-& {
-  $ErrorActionPreference = "Stop"
-  $version = "v1.0.2"
-  $skillDir = Join-Path $env:USERPROFILE ".agents\skills\prototype-to-delivery"
-  $backupDir = $null
-  New-Item -ItemType Directory -Force (Split-Path $skillDir) | Out-Null
-  if (Test-Path -LiteralPath $skillDir) {
-    $backupRoot = Join-Path $env:USERPROFILE ".skill-backups"
-    New-Item -ItemType Directory -Force $backupRoot | Out-Null
-    $backupDir = Join-Path $backupRoot ("prototype-to-delivery-" + [guid]::NewGuid().ToString("N"))
-    Move-Item -LiteralPath $skillDir -Destination $backupDir
-    Write-Host "旧版本备份：$backupDir"
-  }
-  try {
-    git clone --depth 1 --branch $version https://github.com/onekevindu/prototype-to-delivery.git $skillDir
-    if ($LASTEXITCODE -ne 0) { throw "Git 克隆失败" }
-  } catch {
-    if (Test-Path -LiteralPath $skillDir) { Remove-Item -LiteralPath $skillDir -Recurse -Force }
-    if ($backupDir) { Move-Item -LiteralPath $backupDir -Destination $skillDir }
-    throw
-  }
-  Write-Host "已安装 ${version}：$skillDir"
-}
+```text
+请将当前宿主中已安装的 prototype-to-delivery 更新为 v1.0.3。
+仓库：https://github.com/onekevindu/prototype-to-delivery
+请查找实际安装位置，备份旧版本后完成替换，并验证宿主识别情况。
 ```
 
-</details>
+需要重装旧版本时，直接指定历史标签，例如：
 
-### 方式二：自动下载 ZIP 并安装（无需 Git）
-
-复制对应系统的整段命令执行，自动下载、解压、备份旧安装并放入新版。下载或解压失败时，旧安装仍保留在原位置。macOS/Linux 使用 `curl` 和 `unzip`；Windows 使用系统自带的 PowerShell 下载与解压功能。
-
-<details>
-<summary>macOS / Linux：终端执行</summary>
-
-```bash
-(
-  set -e
-  version="v1.0.2"
-  skill_dir="$HOME/.agents/skills/prototype-to-delivery"
-  work_dir=$(mktemp -d)
-  trap 'rm -rf "$work_dir"' EXIT
-  curl -fL --retry 2 "https://github.com/onekevindu/prototype-to-delivery/archive/refs/tags/$version.zip" -o "$work_dir/skill.zip"
-  unzip -q "$work_dir/skill.zip" -d "$work_dir"
-  source_dir="$work_dir/prototype-to-delivery-${version#v}"
-  test -f "$source_dir/SKILL.md"
-  mkdir -p "$(dirname "$skill_dir")" "$HOME/.skill-backups"
-  if [ -e "$skill_dir" ] || [ -L "$skill_dir" ]; then
-    backup_dir=$(mktemp -d "$HOME/.skill-backups/prototype-to-delivery.XXXXXX")
-    mv "$skill_dir" "$backup_dir/prototype-to-delivery"
-    printf '旧版本备份：%s\n' "$backup_dir/prototype-to-delivery"
-  fi
-  mv "$source_dir" "$skill_dir"
-  printf '已安装 %s：%s\n' "$version" "$skill_dir"
-)
+```text
+请将当前宿主中的 prototype-to-delivery 重新安装为 v1.0.1。
+仓库：https://github.com/onekevindu/prototype-to-delivery
+请先备份当前安装及本地修改，安装指定标签对应的版本，再核对版本与识别状态。
 ```
 
-</details>
+可安装的历史版本见 [GitHub 标签列表](https://github.com/onekevindu/prototype-to-delivery/tags)。已发布标签保留，不移动、不覆盖；Agent 可通过 Git 或该标签的 ZIP 获取相应版本。当前版本见 [VERSION](VERSION)，变更与迁移说明见 [CHANGELOG.md](CHANGELOG.md)。
 
-<details>
-<summary>Windows：PowerShell 执行</summary>
-
-```powershell
-& {
-  $ErrorActionPreference = "Stop"
-  $version = "v1.0.2"
-  $skillDir = Join-Path $env:USERPROFILE ".agents\skills\prototype-to-delivery"
-  $workDir = Join-Path ([IO.Path]::GetTempPath()) ("prototype-to-delivery-" + [guid]::NewGuid().ToString("N"))
-  New-Item -ItemType Directory $workDir | Out-Null
-  try {
-    $zipPath = Join-Path $workDir "skill.zip"
-    Invoke-WebRequest -UseBasicParsing -Uri "https://github.com/onekevindu/prototype-to-delivery/archive/refs/tags/$version.zip" -OutFile $zipPath
-    Expand-Archive -LiteralPath $zipPath -DestinationPath $workDir
-    $sourceDir = Join-Path $workDir ("prototype-to-delivery-" + ($version -replace '^v', ''))
-    if (-not (Test-Path -LiteralPath (Join-Path $sourceDir "SKILL.md"))) { throw "ZIP 内容不完整" }
-    New-Item -ItemType Directory -Force (Split-Path $skillDir) | Out-Null
-    if (Test-Path -LiteralPath $skillDir) {
-      $backupRoot = Join-Path $env:USERPROFILE ".skill-backups"
-      New-Item -ItemType Directory -Force $backupRoot | Out-Null
-      $backupDir = Join-Path $backupRoot ("prototype-to-delivery-" + [guid]::NewGuid().ToString("N"))
-      Move-Item -LiteralPath $skillDir -Destination $backupDir
-      Write-Host "旧版本备份：$backupDir"
-    }
-    Move-Item -LiteralPath $sourceDir -Destination $skillDir
-    Write-Host "已安装 ${version}：$skillDir"
-  } finally {
-    Remove-Item -LiteralPath $workDir -Recurse -Force
-  }
-}
-```
-
-</details>
-
-### 方式三：手动安装
-
-1. 下载 [v1.0.2 ZIP](https://github.com/onekevindu/prototype-to-delivery/archive/refs/tags/v1.0.2.zip) 并解压。
-2. 若已有安装，将整个旧目录移到用户目录下的 `.skill-backups` 中，并用版本号或日期区分。
-3. 将解压得到的 `prototype-to-delivery-1.0.2` 文件夹改名为 `prototype-to-delivery`，放到上表中对应的位置。
-4. 确认最终路径直接是 `…/skills/prototype-to-delivery/SKILL.md`，在宿主中刷新或开始新任务。
-
-### 更新与安装历史版本
-
-在 [GitHub 历史版本](https://github.com/onekevindu/prototype-to-delivery/tags) 选择需要的标签，例如 `v1.0.1`：
-
-- **Git / ZIP 自动安装**：把命令里的 `version` 改成对应标签，重新执行整段命令。
-- **手动安装**：下载该标签的 ZIP，按方式三重新安装。
-
-已发布标签保留，不移动、不覆盖；不同版本可以重新下载。当前版本见 [VERSION](VERSION)，变化见 [CHANGELOG.md](CHANGELOG.md)。旧目录备份包含本地定制、安装记录和旧 `.git`；需要保留定制时，从备份中取回并比较合并。
-
-这些命令只处理选定的安装目录；已有其他位置的同名副本时，应先整理为一个有效安装位置。备份在 skills 扫描目录之外，确认新版正常后可自行清理。
+安装完成后，以 Agent 报告的实际安装位置和宿主识别结果为准。文件已放入目录、宿主已识别、当前任务已激活该 Skill 是不同状态；尚未验证的部分应如实说明。
 
 ---
 
@@ -285,17 +166,9 @@ prototype-to-delivery/
 
 ## 📦 可选的维护者验证与发布
 
-普通用户安装时无需执行本节。维护者可在已有的 Python 开发环境安装 PyYAML，运行 YAML 校验与回归测试：
+维护者可在开发环境中使用依赖 PyYAML 的 `scripts/verify.py` 校验文件与 YAML 元数据，相关回归测试位于 `tests/test_verify.py`。这些是可选维护工具，不是用户安装 Skill 的前置步骤。
 
-```bash
-python3 -m pip install PyYAML
-python3 scripts/verify.py
-python3 -m unittest discover -s tests -v
-```
-
-`verify.py` 默认只检查本地文件与 YAML 元数据；显式使用 `--platform codex --runtime --timeout 10` 时检查本地 Codex 的发现与启用状态。文件检查、运行时发现和实际业务行为应分别验证。
-
-发布时更新 `VERSION`、`CHANGELOG.md` 和本页命令中的版本号，通过验证后提交并创建对应 Git 标签，再推送分支和标签。GitHub 会提供该标签的源码 ZIP，历史标签持续保留。
+发布时更新 `VERSION`、`CHANGELOG.md` 和本页聊天示例中的版本号，通过验证后提交并创建对应 Git 标签，再推送分支和标签。GitHub 会提供该标签的源码 ZIP，历史标签持续保留。
 
 ---
 
