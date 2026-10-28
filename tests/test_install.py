@@ -27,6 +27,7 @@ class InstallLifecycleTests(unittest.TestCase):
             target = self.source / relative
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(ROOT / relative, target)
+        self.set_version("1.0.0")
         self.dest = self.root / "host/skills/prototype-to-delivery"
 
     def run_install(self, action, *extra):
